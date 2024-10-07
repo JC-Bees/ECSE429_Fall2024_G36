@@ -58,6 +58,8 @@ delete the instance of the relationship named projects between category and proj
 # Base URL for the API
 BASE_URL = "http://localhost:4567/categories"
 
+# ACTUAL BEHAVIOUR WORKING
+
 # First general test to make sure everything works 
 def test_get_GUI():
     url = "http://localhost:4567/gui/entities"  # Adjust the port if needed
@@ -312,4 +314,4 @@ def test_delete_todo_by_id_from_category():
     response = requests.get(f"{BASE_URL}/{category_id}/projects/{project_id}")
     assert response.status_code == 404
      
-     
+# WHEN EXPECTED BEHAVIOUR FAILS
