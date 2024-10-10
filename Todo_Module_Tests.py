@@ -4,7 +4,7 @@ import pytest_randomly
 
 # Run Tests using "pytest Todo_Module_Tests.py" In terminal
 
-BASE_URL = "http://localhost:4567/"
+BASE_URL = BASE_URL = "http://localhost:4567/"
 
 BASE_URL_POST = "http://localhost:4567/todos"
 
