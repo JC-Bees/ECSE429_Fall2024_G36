@@ -4,7 +4,7 @@ import pytest
 # Run Tests using "pytest Projects_Module_Tests.py" In terminal
 
 BASE_URL = "http://localhost:4567/"
-"""
+
 @pytest.fixture(autouse=True)
 def tearDown():
     # This function will run before each test to reset all variables
@@ -17,7 +17,36 @@ def tearDown():
         for project in projects:
             id = project["id"]
             requests.delete(f"{url}/{id}") # deletes each project in system
-"""
+
+#create project for every test
+def create_project():
+    url = "http://localhost:4567/projects"
+
+    data = {
+        "title": "Testing Project"
+    }
+    response = requests.post(url, json = data)
+
+    response = requests.get(BASE_URL + "projects")
+
+    id = response.json()["projects"][0]['id']
+    return id
+
+def create_taskof():
+    url = "http://localhost:4567/todos"
+
+    data = {
+        "title": "finish this project"
+    }
+    response = requests.post(url, json = data)
+
+    response = requests.get(url)
+
+    print("is this is?")
+    print(response.json())
+    id = response.json()["todos"][0]['id']
+    return id
+
 # First general test to make sure everything works 
 def test_todo_get_GUI():
     url = BASE_URL + "gui/entities"  # Adjust the port if needed
@@ -32,6 +61,7 @@ def test_todo_get_GUI():
 #/projects
 # Make sure that all fields are available when getting all projects
 def test_projects_get_data():
+    id = create_project()
     url = BASE_URL + "projects"  
     response = requests.get(url)
     
@@ -42,7 +72,6 @@ def test_projects_get_data():
     assert response.headers['Content-Type'] == 'application/json'
 
     data = response.json()['projects']
-
     assert 'id' in data[0]
     assert 'title' in data[0]
     assert 'active' in data[0]
@@ -150,9 +179,11 @@ def test_projects_undocumented_patch_method():
 
 #Get a project with a specific id
 def test_project_id_get_data():
+    id = create_project()
+
+
     url = BASE_URL + "projects/{id}"  
-    
-    response = requests.get(url.format(id = 1))
+    response = requests.get(url.format(id=id))
 
     # Check that the response status code is 200 OK
     assert response.status_code == 200
@@ -191,9 +222,10 @@ def test_project_no_id_fail_test():
 
 # Get Head information for project with body input
 def test_project_id_head_data_body():
+    id = create_project()
     url = BASE_URL + "projects/{id}"  
 
-    response = requests.head(url.format(id = 1))
+    response = requests.head(url.format(id = id))
     
     # Check that the response status code is 200 OK
     assert response.status_code == 200
@@ -203,18 +235,19 @@ def test_project_id_head_data_body():
 
 #Test if Put updates the informtion on a project
 def test_project_put_method():
+    id = create_project()
     url = BASE_URL + "projects/{id}"  
 
     data = {
                 "title": "finish the coffee",
                 }
 
-    response = requests.put(url.format(id = 2), json = data)
+    response = requests.put(url.format(id = id), json = data)
 
     assert response.status_code == 200
 
     data1 = response.json()
-    response = requests.get(url.format(id = 2))
+    response = requests.get(url.format(id = id))
     data2 = response.json()['projects'][0]
 
     assert data1['title'] == data2['title']
@@ -224,18 +257,19 @@ def test_project_put_method():
 
 #Post test to change title with given id
 def test_project_post_method():
+    id = create_project()
     url = BASE_URL + "projects/{id}"  
 
     data = {
                 "title": "finish the coffee",
                 }
 
-    response = requests.post(url.format(id = 2), json = data)
+    response = requests.post(url.format(id = id), json = data)
 
     assert response.status_code == 200
 
     data1 = response.json()
-    response = requests.get(url.format(id = 2))
+    response = requests.get(url.format(id = id))
     data2 = response.json()['projects'][0]
 
     assert data1['title'] == data2['title']
@@ -257,16 +291,14 @@ def test_project_post_fail_method():
 
 #delete a project with its id
 def test_delete_project_test(): 
+    id = create_project()
     url = BASE_URL + "projects/{id}"
-    response = requests.get(BASE_URL + 'projects')
-    data = response.json()['projects'][1]
-    id_to_delete = data['id']
+    
 
-    response = requests.delete(url.format(id = id_to_delete))
+    response = requests.delete(url.format(id = id))
 
     assert response.status_code == 200
-
-    response = requests.get(url.format(id = id_to_delete))
+    response = requests.get(url.format(id = id))
 
     assert response.status_code == 404
 
@@ -315,16 +347,17 @@ def test_project_id_categories_head():
 
 #Successfully post a category to a specific project
 def test_project_id_categories_post():
+    id = create_project()
     url = BASE_URL + "projects/{id}/categories"
 
     data = {
         "id": "1"
     }
 
-    response = requests.post(url.format(id=1), json = data)
+    response = requests.post(url.format(id=id), json = data)
     print("look here")
     assert response.status_code == 201
-    response = requests.get(url.format(id=1))
+    response = requests.get(url.format(id=id))
     
     data = response.json()
     test = False
@@ -385,6 +418,7 @@ def test_project_id_categories_patch_method():
 
 #Succesful Deletion of a categorie and project relationship
 def test_project_id_categories_delete_method1():
+    id = create_project()
     #first create the relation betwen the category and ID
     url = BASE_URL + "projects/{id}/categories"
 
@@ -393,13 +427,13 @@ def test_project_id_categories_delete_method1():
         "id": "1"
     }
 
-    response = requests.post(url.format(id=1), json = data)
+    response = requests.post(url.format(id=id), json = data)
 
     assert response.status_code == 201
 
-    url1 = BASE_URL + "projects/1/categories/1"
+    url1 = BASE_URL + "projects/{id}/categories/1"
 
-    response = requests.delete(url1.format(1,1))
+    response = requests.delete(url1.format(id = id))
 
     assert response.status_code == 200
 
@@ -463,13 +497,15 @@ def test_project_id_category_id_patch_method_fail():
 
 #Post Method to add a task to a project
 def test_project_id_task():
-    url = BASE_URL + "projects/1/tasks"
+    id = create_project()
+    id_task = create_taskof()
+    url = BASE_URL + "projects/{id}/tasks"
 
     data = {
-        "id" : "1"
+        "id" : f"{id_task}"
     }
 
-    response = requests.post(url, json = data)
+    response = requests.post(url.format(id = id), json = data)
 
     assert response.status_code == 201
 
@@ -486,26 +522,26 @@ def test_projet_id_tasks_head_method():
 
 #Get method for a tasks for a specific project
 def test_project_id_tasks_get_method():
+    id = create_project()
+    id_task = create_taskof()
     #link tasks to the specific project
-    url = BASE_URL + "projects/1/tasks"
+    url = BASE_URL + "projects/{id}/tasks"
 
     data = {
-        "id" : "1"
+        "id" : f"{id_task}"
     }
 
-    response = requests.post(url, json = data)
+    response = requests.post(url.format(id = id), json = data)
 
     assert response.status_code == 201
 
     #get that specific task
 
-    response = requests.get(url)
-
-    print(response.json()['todos'])
+    response = requests.get(url.format(id = id))
 
     stop = False
     for field in response.json()['todos']:
-        if field["id"] == "1":
+        if field["id"] == f"{id_task}":
             stop = True
     if not stop:
         assert False
@@ -546,18 +582,21 @@ def test_project_id_tasks_patch_method():
 
 #delete a task connected to a project
 def test_project_id_task_id_methiod():
-    url = "http://localhost:4567/projects/3/tasks"
+    id = create_project()
+    id_task = create_taskof()
+    url = "http://localhost:4567/projects/{id}/tasks"
 
 
     data = {
-        "id": "2"
+        "id": f"{id_task}"
     }
 
-    response = requests.post(url, json = data)
+    response = requests.post(url.format(id = id), json = data)
 
     assert response.status_code == 201
 
-    response = requests.delete("http://localhost:4567/projects/3/tasks/2")
+    url = "http://localhost:4567/projects/{id}/tasks/{id_2}"
+    response = requests.delete(url.format(id = id, id_2 = id_task))
 
     assert response.status_code == 200
 
