@@ -1,65 +1,24 @@
 import requests
+import pytest
 
 # Run Tests using "pytest Categories_Module_Tests.py" In terminal
 
-"""
-This endpoint can be filtered with fields as URL Query Parameters.
-
-e.g. http://localhost:4567/categories?title=eprehenderit%20in%20volu
-
-GET /categories
-return all the instances of category
-HEAD /categories
-headers for all the instances of category
-POST /categories
-we should be able to create category without a ID using the field values in the body of the message
-/categories/:id
-e.g. http://localhost:4567/categories/:id
-
-GET /categories/:id
-return a specific instances of category using a id
-HEAD /categories/:id
-headers for a specific instances of category using a id
-POST /categories/:id
-amend a specific instances of category using a id with a body containing the fields to amend
-PUT /categories/:id
-amend a specific instances of category using a id with a body containing the fields to amend
-DELETE /categories/:id
-delete a specific instances of category using a id
-/categories/:id/todos
-e.g. http://localhost:4567/categories/:id/todos
-
-GET /categories/:id/todos
-return all the todo items related to category, with given id, by the relationship named todos
-HEAD /categories/:id/todos
-headers for the todo items related to category, with given id, by the relationship named todos
-POST /categories/:id/todos
-create an instance of a relationship named todos between category instance :id and the todo instance represented by the id in the body of the message
-/categories/:id/todos/:id
-e.g. http://localhost:4567/categories/:id/todos/:id
-
-DELETE /categories/:id/todos/:id
-delete the instance of the relationship named todos between category and todo using the :id
-/categories/:id/projects
-e.g. http://localhost:4567/categories/:id/projects
-
-GET /categories/:id/projects
-return all the project items related to category, with given id, by the relationship named projects
-HEAD /categories/:id/projects
-headers for the project items related to category, with given id, by the relationship named projects
-POST /categories/:id/projects
-create an instance of a relationship named projects between category instance :id and the project instance represented by the id in the body of the message
-/categories/:id/projects/:id
-e.g. http://localhost:4567/categories/:id/projects/:id
-
-DELETE /categories/:id/projects/:id
-delete the instance of the relationship named projects between category and project using the :id
-"""
 # Base URL for the API
 BASE_URL = "http://localhost:4567/categories"
 
-# ACTUAL BEHAVIOUR WORKING
+@pytest.fixture(autouse=True)
+def tearDown():
+    # This function will run before each test to reset all variables
+    yield
+    response = requests.get(BASE_URL)
+    if response.status_code == 200:
+        # if there are categories in the system
+        categories = response.json().get("categories", [])
+        for category in categories:
+            id = category["id"]
+            requests.delete(f"{BASE_URL}/{id}") # deletes each category in system
 
+# ACTUAL BEHAVIOUR WORKING
 
 # First general test to make sure everything works
 def test_get_GUI():

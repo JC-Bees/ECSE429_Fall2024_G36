@@ -1,9 +1,23 @@
 import requests
+import pytest
 
 # Run Tests using "pytest Todo_Module_Tests.py" In terminal
 
 BASE_URL = "http://localhost:4567/"
-
+"""
+@pytest.fixture(autouse=True)
+def tearDown():
+    # This function will run before each test to reset all variables
+    yield
+    url = BASE_URL+"todos"
+    response = requests.get(url)
+    if response.status_code == 200:
+        # if there are todos in the system
+        todos = response.json().get("todos", [])
+        for todo in todos:
+            id = todo["id"]
+            requests.delete(f"{url}/{id}") # deletes each todo in system
+"""
 # First general test to make sure everything works 
 def test_todo_get_GUI():
     url = BASE_URL + "gui/entities"  # Adjust the port if needed
