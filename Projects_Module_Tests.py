@@ -5,6 +5,7 @@ import pytest
 
 BASE_URL = "http://localhost:4567/"
 
+
 @pytest.fixture(autouse=True)
 def tearDown():
     # This function will run before each test to reset all variables

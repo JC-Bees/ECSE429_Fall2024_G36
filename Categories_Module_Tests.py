@@ -1,5 +1,6 @@
 import requests
 import pytest
+import pytest_randomly
 
 # Run Tests using "pytest Categories_Module_Tests.py" In terminal
 
