@@ -1,5 +1,6 @@
 import requests
 import pytest
+import pytest_randomly
 
 # Can run all tests by running this file
 

@@ -4,7 +4,7 @@ import pytest
 # Run Tests using "pytest Projects_Module_Tests.py" In terminal
 
 BASE_URL = "http://localhost:4567/"
-"""
+
 @pytest.fixture(autouse=True)
 def tearDown():
     # This function will run before each test to reset all variables
@@ -17,7 +17,7 @@ def tearDown():
         for project in projects:
             id = project["id"]
             requests.delete(f"{url}/{id}") # deletes each project in system
-"""
+
 # First general test to make sure everything works 
 def test_todo_get_GUI():
     url = BASE_URL + "gui/entities"  # Adjust the port if needed

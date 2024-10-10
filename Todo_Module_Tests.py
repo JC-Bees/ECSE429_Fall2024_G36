@@ -1,23 +1,35 @@
 import requests
 import pytest
+import pytest_randomly
 
 # Run Tests using "pytest Todo_Module_Tests.py" In terminal
 
 BASE_URL = "http://localhost:4567/"
-"""
+
+BASE_URL_POST = "http://localhost:4567/todos"
+
 @pytest.fixture(autouse=True)
 def tearDown():
     # This function will run before each test to reset all variables
-    yield
-    url = BASE_URL+"todos"
-    response = requests.get(url)
-    if response.status_code == 200:
-        # if there are todos in the system
-        todos = response.json().get("todos", [])
-        for todo in todos:
-            id = todo["id"]
-            requests.delete(f"{url}/{id}") # deletes each todo in system
-"""
+        yield
+        url = BASE_URL+"todos"
+        response = requests.get(url)
+        if response.status_code == 200:
+                # if there are todos in the system
+                todos = response.json().get("todos", [])
+                for todo in todos:
+                        id = todo["id"]
+                        requests.delete(f"{url}/{id}") # deletes each todo in system
+        url = "http://localhost:4567/categories"
+        response = requests.get(url)
+        if response.status_code == 200:
+                # if there are projects in the system
+                categories = response.json().get("categories", [])
+                for category in categories:
+                        id = category["id"]
+                        requests.delete(f"{url}/{id}") # deletes each project in system
+
+
 # First general test to make sure everything works 
 def test_todo_get_GUI():
     url = BASE_URL + "gui/entities"  # Adjust the port if needed
@@ -32,6 +44,17 @@ def test_todo_get_GUI():
 # Get the todo page contents
 def test_todo_get_data():
     url = BASE_URL + "todos"  
+
+    #Setup
+    data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+    response = requests.post(BASE_URL_POST, json = data)
+    assert response.status_code == 201
+    
+    data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+    response = requests.post(BASE_URL_POST, json = data)
+    assert response.status_code == 201
+
+    #Test
     response = requests.get(url)
     
     # Check that the response status code is 200 OK
@@ -47,10 +70,19 @@ def test_todo_get_data():
     assert 'doneStatus' in data[0]
     assert 'description' in data[0]
 
-    # Get the todo page contents with a body
+    # Get the todo page contents with a body, should not change output
 def test_todo_get_data_body():
     url = BASE_URL + "todos"  
+    #Setup
+    data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+    response = requests.post(BASE_URL_POST, json = data)
+    assert response.status_code == 201
+    
+    data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+    response = requests.post(BASE_URL_POST, json = data)
+    assert response.status_code == 201
 
+    #Test
     data = {"id":1}
 
     response = requests.get(url, json = data)
@@ -239,7 +271,19 @@ def test_todo_options():
 def test_todo_id_get_data():
     url = BASE_URL + "todos/{id}"  
     
-    response = requests.get(url.format(id = 1))
+    #Setup
+    data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+    response = requests.post(BASE_URL_POST, json = data)
+    assert response.status_code == 201
+    
+    data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+    response = requests.post(BASE_URL_POST, json = data)
+    assert response.status_code == 201
+    ID = response.json()['id']
+
+    #Test
+    
+    response = requests.get(url.format(id = ID))
 
     # Check that the response status code is 200 OK
     assert response.status_code == 200
@@ -247,12 +291,12 @@ def test_todo_id_get_data():
     # Check that the response content type is text/html
     assert response.headers['Content-Type'] == 'application/json'
 
-    data = response.json()['todos']
+    data = response.json()['todos'][0]
 
-    assert 'id' in data[0]
-    assert 'title' in data[0]
-    assert 'doneStatus' in data[0]
-    assert 'description' in data[0]
+    assert data['id'] == ID
+    assert data['title'] == "StandardTitle2"
+    assert data['doneStatus'] == 'false'
+    assert data['description'] == "StandardDescription2"
 
 # Fail to get todo data by id as no params are present
 def test_todo_id_get_data_Fail_paramMissing():
@@ -300,8 +344,20 @@ def test_todo_id_head_data_fail():
 # Get Head information for todo with body input
 def test_todo_id_head_data_body():
     url = BASE_URL + "todos/{id}"  
+    
+    #Setup
+    data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+    response = requests.post(BASE_URL_POST, json = data)
+    assert response.status_code == 201
+    
+    data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+    response = requests.post(BASE_URL_POST, json = data)
+    assert response.status_code == 201
 
-    response = requests.head(url.format(id = 1))
+    ID = response.json()['id']
+
+    #Test
+    response = requests.head(url.format(id = ID))
     
     # Check that the response status code is 200 OK
     assert response.status_code == 200
@@ -314,13 +370,24 @@ def test_todo_id_head_data_body():
 def test_todo_id_post_data_Success_FullBody():
         url = BASE_URL + "todos/{id}"  
 
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+        
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
+
         data = {
                 "title": "titletestjcb",
                 "doneStatus": False,
                 "description": "descriptiontestjcb"
                 }
 
-        response = requests.post(url.format(id = 1), json = data)
+        response = requests.post(url.format(id = ID), json = data)
 
         assert response.status_code == 200
 
@@ -333,7 +400,18 @@ def test_todo_id_post_data_Success_FullBody():
 def test_todo_id_post_data_Success_EmptyBody():
         url = BASE_URL + "todos/{id}"    
 
-        response = requests.get(url.format(id = 1))
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+        
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
+
+        response = requests.get(url.format(id = ID))
 
         assert response.status_code == 200
 
@@ -345,7 +423,7 @@ def test_todo_id_post_data_Success_EmptyBody():
 
         data = { }
 
-        response = requests.post(url.format(id = 1), json = data)
+        response = requests.post(url.format(id = ID), json = data)
 
         assert response.status_code == 200
 
@@ -359,7 +437,18 @@ def test_todo_id_post_data_Success_EmptyBody():
 def test_todo_id_post_data_Success_TitleOnly():
         url = BASE_URL + "todos/{id}"  
         
-        response = requests.get(url.format(id = 1))
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+        
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
+
+        response = requests.get(url.format(id = ID))
 
         data1 = response.json()['todos'][0]
 
@@ -369,7 +458,7 @@ def test_todo_id_post_data_Success_TitleOnly():
 
         data = {"title":"JCBTestTitle" }
 
-        response = requests.post(url.format(id = 1), json = data)
+        response = requests.post(url.format(id = ID), json = data)
 
         assert response.status_code == 200
 
@@ -383,7 +472,18 @@ def test_todo_id_post_data_Success_TitleOnly():
 def test_todo_id_post_data_Success_DescriptionEmpty():
         url = BASE_URL + "todos/{id}"  
         
-        response = requests.get(url.format(id = 1))
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+        
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
+
+        response = requests.get(url.format(id = ID))
 
         data = response.json()['todos'][0]
 
@@ -393,7 +493,7 @@ def test_todo_id_post_data_Success_DescriptionEmpty():
 
         data = {"title":"JCBTestTitle" , "description": ""}
 
-        response = requests.post(url.format(id = 1), json = data)
+        response = requests.post(url.format(id = ID), json = data)
 
         assert response.status_code == 200
 
@@ -435,13 +535,24 @@ def test_todo_id_post_data_Fail_BadID():
 def test_todo_id_post_data_Fail_TitleEmpty():
         url = BASE_URL + "todos/{id}"   
 
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+        
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
+
         data = {
                 "title": "",
                 "doneStatus": False,
                 "description": "descriptiontest"
                 }
 
-        response = requests.post(url.format(id = 1), json = data)
+        response = requests.post(url.format(id = ID), json = data)
 
         assert response.status_code == 400
 
@@ -451,6 +562,17 @@ def test_todo_id_post_data_Fail_TitleEmpty():
 def test_todo_id_post_data_Fail_Bool():
         url = BASE_URL + "todos/{id}"    
 
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+        
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
+
         data = {
                 "id": 1,
                 "title": "blahblah",
@@ -458,7 +580,7 @@ def test_todo_id_post_data_Fail_Bool():
                 "description": "descriptiontest"
                 }
 
-        response = requests.post(url.format(id = 1), json = data)
+        response = requests.post(url.format(id = ID), json = data)
 
         assert response.status_code == 400
 
@@ -469,9 +591,20 @@ def test_todo_id_post_data_Fail_Bool():
 def test_todo_id_post_data_Fail_BadKey():
         url = BASE_URL + "todos/{id}"   
 
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+        
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
+
         data = {"bobbyMcgee":"Janis Joplin" }
 
-        response = requests.post(url.format(id = 1), json = data)
+        response = requests.post(url.format(id = ID), json = data)
 
         assert response.status_code == 400
 
@@ -490,6 +623,16 @@ def test_todo_id_patch():
 def test_todo_id_put_Success_full():
         url = BASE_URL + "todos/{id}"  
 
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+        
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
         data = {
                 "id" : 1,
                 "title": "titletestjcb",
@@ -497,7 +640,7 @@ def test_todo_id_put_Success_full():
                 "description": "descriptiontestjcb"
                 }
 
-        response = requests.put(url.format(id = 1), json = data)
+        response = requests.put(url.format(id = ID), json = data)
 
         assert response.status_code == 200
 
@@ -510,11 +653,21 @@ def test_todo_id_put_Success_full():
 def test_todo_id_put_Success_title():
         url = BASE_URL + "todos/{id}"  
 
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+        
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
         data = {
                 "title": "titletestjcb123",
                 }
 
-        response = requests.post(url.format(id = 1), json = data)
+        response = requests.post(url.format(id = ID), json = data)
 
         assert response.status_code == 200
 
@@ -536,9 +689,19 @@ def test_todo_id_put_Fail_ID():
 def test_todo_id_put_Fail_Body():
         url = BASE_URL + "todos/{id}"  
 
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+        
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
         data = {}
 
-        response = requests.put(url.format(id = 1), json = data)
+        response = requests.put(url.format(id = ID), json = data)
 
         assert response.status_code == 400
 
@@ -551,7 +714,7 @@ def test_todo_id_delete():
 
         data ={"title":"deleteTest"}
 
-        response = requests.post(BASE_URL+"todos",json = data)
+        response = requests.post(BASE_URL_POST,json = data)
 
         data = response.json()
 
@@ -600,109 +763,189 @@ def test_todo_id_options():
 
 # Get the todo category page contents by id
 def test_todo_id_categories_get_data():
-    url = BASE_URL + "todos/{id}/categories"  
+        url = BASE_URL + "todos/{id}/categories"  
+
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
+
+        data = {"title": "StandardTitle3","description": "StandardDescription3"}
+        response = requests.post(url.format(id = ID), json = data)
+        assert response.status_code == 201
+
+        IDCAT = response.json()['id']
     
-    response = requests.get(url.format(id = 2))
+        response = requests.get(url.format(id = ID))
 
-    # Check that the response status code is 200 OK
-    assert response.status_code == 200
-    
-    # Check that the response content type is text/html
-    assert response.headers['Content-Type'] == 'application/json'
+        # Check that the response status code is 200 OK
+        assert response.status_code == 200
+        
+        # Check that the response content type is text/html
+        assert response.headers['Content-Type'] == 'application/json'
 
-    data = response.json()
+        data = response.json()['categories'][0]
 
-    assert 'categories' in data
+        assert data['id'] == IDCAT
+        assert data['title'] == "StandardTitle3"
+        assert data['description'] == "StandardDescription3"
 
 
 # Get the todo category page contents without specifying an id
 def test_todo_id_categories_get_data_noId():
-    url = BASE_URL + "todos/{id}/categories"  
+        url = BASE_URL + "todos/{id}/categories"  
+
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID1 = response.json()['id']
+
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        data = {"title": "StandardTitle3","description": "StandardDescription3"}
+        response = requests.post(url.format(id = ID1), json = data)
+        assert response.status_code == 201
+
+        IDCAT = response.json()['id']
     
-    response = requests.get(url)
+        response = requests.get(url)
 
-    # Check that the response status code is 200 OK
-    assert response.status_code == 200
-    
-    # Check that the response content type is text/html
-    assert response.headers['Content-Type'] == 'application/json'
+        # Check that the response status code is 200 OK
+        assert response.status_code == 200
+        
+        # Check that the response content type is text/html
+        assert response.headers['Content-Type'] == 'application/json'
 
-    data = response.json()
+        data = response.json()['categories'][0]
 
-    assert 'categories' in data
+        assert data['id'] == IDCAT
+        assert data['title'] == "StandardTitle3"
+        assert data['description'] == "StandardDescription3"
 
 
 # Get the todo category page contents of a todo that has no categories
 def test_todo_id_categories_get_data_noCategory():
 
-    url = BASE_URL + "todos/{id}"
+        url = BASE_URL + "todos/{id}/categories"  
 
-    data = {"title":"deleteTest"}
+            #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
 
-    response = requests.post(BASE_URL+"todos",json = data)
+        ID = response.json()['id']
 
-    data = response.json()
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
 
-    ID = data['id']
+        response = requests.get(url.format(id = ID))
 
-    url = BASE_URL + "todos/{id}/categories"  
+        # Check that the response status code is 200 OK
+        assert response.status_code == 200
+        
+        # Check that the response content type is text/html
+        assert response.headers['Content-Type'] == 'application/json'
 
-    response = requests.get(url.format(id = ID))
+        data = response.json()['categories']
 
-    # Check that the response status code is 200 OK
-    assert response.status_code == 200
-    
-    # Check that the response content type is text/html
-    assert response.headers['Content-Type'] == 'application/json'
-
-    data = response.json()['categories']
-
-    assert data == []
+        assert data == []
 
 # Get Head information for todo category with ID
 def test_todo_id_categories_head_data_body():
-    url = BASE_URL + "todos/{id}/categories"  
+        url = BASE_URL + "todos/{id}/categories"  
 
-    response = requests.head(url.format(id = 1))
-    
-    # Check that the response status code is 200 OK
-    assert response.status_code == 200
-    
-    # Check that the response content type is text/html
-    assert response.headers['Content-Type'] == 'application/json'
+            #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
+
+        data = {"title": "StandardTitle3","description": "StandardDescription3"}
+        response = requests.post(url.format(id = ID), json = data)
+        assert response.status_code == 201
+
+        IDCAT = response.json()['id']
+
+        response = requests.head(url.format(id = ID))
+        
+        # Check that the response status code is 200 OK
+        assert response.status_code == 200
+        
+        # Check that the response content type is text/html
+        assert response.headers['Content-Type'] == 'application/json'
 
 
 # Post to todo categories page contents will all inputs
 def test_todo_id_categories_post_data_Success_FullBody():
         url = BASE_URL + "todos/{id}/categories"  
 
-        data = {
-                "title": "titletestjcb",
-                "description": "descriptiontestjcb"
-                }
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
 
-        response = requests.post(url.format(id = 1), json = data)
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
+
+        data = {"title": "StandardTitle3","description": "StandardDescription3"}
+        response = requests.post(url.format(id = ID), json = data)
+        assert response.status_code == 201
+
+        IDCAT = response.json()['id']
 
         assert response.status_code == 201
 
         data = response.json()
-        assert data['title'] == 'titletestjcb'
-        assert data['description'] == "descriptiontestjcb"
+        assert data['id'] == IDCAT
+        assert data['title'] == "StandardTitle3"
+        assert data['description'] == "StandardDescription3"
 
         
 # Post to todo page contents will only title
 def test_todo_id_categories_post_data_Success_TitleOnly():
         url = BASE_URL + "todos/{id}/categories"    
 
-        data = {"title":"JCBTestTitle" }
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
 
-        response = requests.post(url.format(id = 1), json = data)
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
+
+        data = {"title": "StandardTitle3"}
+        response = requests.post(url.format(id = ID), json = data)
+        assert response.status_code == 201
+
+        IDCAT = response.json()['id']
 
         assert response.status_code == 201
 
         data = response.json()
-
-        assert data['title'] == "JCBTestTitle"
+        assert data['id'] == IDCAT
+        assert data['title'] == "StandardTitle3"
 
 
 # Post to todo id without specifying id
@@ -722,9 +965,19 @@ def test_todo_id_categories_post_data_Fail_ID():
 def test_todo_id_categories_post_data_Fail_TitleEmpty():
         url = BASE_URL + "todos/{id}/categories"      
 
-        data = { }
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
 
-        response = requests.post(url.format(id = 1), json = data)
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
+
+        data = {}
+        response = requests.post(url.format(id = ID), json = data)
 
         assert response.status_code == 400
 
@@ -737,7 +990,19 @@ def test_todo_id_categories_post_data_Fail_BadKey():
 
         data = {"id": 1 }
 
-        response = requests.post(url.format(id = 1), json = data)
+        #Setup
+        data = {"title": "StandardTitle1","doneStatus" : False, "description":"StandardDescription1"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        data = {"title": "StandardTitle2","doneStatus" : False, "description":"StandardDescription2"}
+        response = requests.post(BASE_URL_POST, json = data)
+        assert response.status_code == 201
+
+        ID = response.json()['id']
+
+        data = {"id": 1 }
+        response = requests.post(url.format(id = ID), json = data)
 
         assert response.status_code == 404
 
