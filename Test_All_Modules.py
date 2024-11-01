@@ -12,7 +12,6 @@ if __name__ == "__main__":
     test_all_modules()
 
     #ShutDown the API after tests
-    """
     url = "http://localhost:4567/shutdown"
     response = requests.get(url)
-    """
+    
