@@ -1,5 +1,6 @@
 import requests
 import behave
+import random
 
 BASE_URL = 'http://localhost:4567'
 
