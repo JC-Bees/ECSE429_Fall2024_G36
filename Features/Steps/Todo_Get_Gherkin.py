@@ -34,7 +34,7 @@ def Todo_step_given_todo_items(context):
 @given(u'I have no todo item')
 def Todo_step_given_no_todo_item(context):
     # Get any existing todos
-    response = requests.get(f"{BASE_URL}")
+    response = requests.get(BASE_URL)
     todoList = response.json()['todos']
     # If any exist, then delete them by id
     if (len(todoList) > 0):
