@@ -1,10 +1,10 @@
 import random
 import os
 import subprocess
+import requests
 
 from behave.parser import parse_feature
 
-# Function provided by ChatGPt to obtain the scenario names from behave.
 # As building the randomizer is not part of the project, we have opted to use this generated function.
 def get_scenario_names(feature_file_path):
     with open("Features/" + feature_file_path, 'r') as feature_file:
@@ -19,7 +19,7 @@ def get_scenario_names(feature_file_path):
     return scenario_names
 
 # Get the list of feature files
-feature_files = [f for f in os.listdir('features') if f.endswith('.feature')]
+feature_files = ['projects.feature','todo_feature.feature','categories_feature.feature']
 
 # Shuffle the feature files
 random.shuffle(feature_files)
@@ -32,3 +32,7 @@ for feature_file in feature_files:
     for scenario in scenarios_list:
         subprocess.run(['behave', '-n' + scenario])
 
+
+#ShutDown the API after tests
+url = "http://localhost:4567/shutdown"
+response = requests.get(url)
