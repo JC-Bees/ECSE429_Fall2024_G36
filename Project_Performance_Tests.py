@@ -16,7 +16,6 @@ def tearDown():
         list_of_ids.append(project['id'])
     i = 0
     for id in list_of_ids:
-        print(f"deleting {i}")
         i+=1
         url = "http://localhost:4567/projects/{id}"
         response = requests.delete(url.format(id = id))
@@ -31,7 +30,6 @@ def create_n_projects(n: int):
     
     start_time = time.time()
     for i in range(n):
-        print(i)
         #generate the random data title does not even need to be present to create a project
         data = {}
         #create the random data (post)
@@ -51,7 +49,6 @@ def delete_n_projects(n: int):
     
     #First need to create those n projects
     for i in range(n):
-        print(i)
         data = {}
         response = requests.post(BASE_Project_URL, json = data)
         if response.status_code != 201: 
@@ -83,7 +80,6 @@ def change_n_projects(n: int):
         data = {}
         response = requests.post(BASE_Project_URL, json = data)
         #j = i+1
-        print(i)
         #create i projects
         # for k in range(j): #OH NO A DOUBLE FOR LOOP
         #     data = {}
