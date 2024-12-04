@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import time
 
-# Run Tests using "pytest Todo_Module_Tests.py" In terminal
+# Run Tests using "pytest Categories_Performance_Tests.py" In terminal
 
 BASE_URL = "http://localhost:4567/"
 
@@ -95,3 +95,5 @@ def test_categories_id_delete():
 
                 DeleteTimes[i] = end - start
         np.savetxt(f"DeleteTimes_Categories_{timeCurr}.csv", DeleteTimes, delimiter=",")
+
+
