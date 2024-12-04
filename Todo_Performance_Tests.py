@@ -2,6 +2,8 @@ import requests
 import pytest
 import numpy as np
 import time
+import psutil
+import os
 
 # Run Tests using "pytest Todo_Module_Tests.py" In terminal
 
@@ -10,9 +12,8 @@ BASE_URL = "http://localhost:4567/"
 BASE_URL_POST = "http://localhost:4567/todos"
 
 timeCurr = time.time()
-
+process = psutil.Process(os.getpid())
 TestNum = 1000
-
 @pytest.fixture(autouse=True)
 def tearDown():
     # This function will run before each test to reset all variables
@@ -39,7 +40,7 @@ def tearDown():
 # Post to todo page contents will all inputs | CREATE OBJECT OPERATION EXPERIMENT
 def test_todo_post_data_Success_FullBody():
         url = BASE_URL + "todos"  
-        PostTimes = np.zeros(TestNum)
+        PostData = np.zeros((TestNum,3))
         for i in range(TestNum):
                 
                 dataPOST = {
@@ -48,12 +49,16 @@ def test_todo_post_data_Success_FullBody():
                 "description": f"descriptiontest{i}"
                 }
                 start = time.perf_counter()
+                psutil.cpu_percent(0.0)
                 response = requests.post(url, json = dataPOST)
+                PostData[i,1] = psutil.cpu_percent(0.1)
+                PostData[i,2] = (psutil.virtual_memory().available / psutil.virtual_memory().total)* 100
                 end = time.perf_counter()
                 assert response.status_code == 201
-                PostTimes[i] = end - start
+                PostData[i,0] = end - start
 
-        np.savetxt(f"PostTimes_{timeCurr}.csv", PostTimes, delimiter=",")
+        np.savetxt(f"PostData_Todo_{timeCurr}.csv", PostData, delimiter=",")
+
         
 
 
@@ -61,7 +66,7 @@ def test_todo_post_data_Success_FullBody():
 def test_todo_id_put_Success_full():
         url = BASE_URL + "todos/{id}"  
         
-        PutTimes = np.zeros(TestNum)
+        PutData = np.zeros((TestNum,3))
         for i in range(TestNum):
 
                 #Setup
@@ -80,11 +85,13 @@ def test_todo_id_put_Success_full():
                         }
                 start = time.perf_counter()
                 response = requests.put(url.format(id = ID), json = dataPUT)
+                PutData[i,1] = psutil.cpu_percent(0.1)
+                PutData[i,2] = (psutil.virtual_memory().available / psutil.virtual_memory().total)* 100
                 end = time.perf_counter()
                 assert response.status_code == 200
-                PutTimes[i] = end - start
+                PutData[i,0] = end - start
 
-        np.savetxt(f"PutTimes_{timeCurr}.csv", PutTimes, delimiter=",")
+        np.savetxt(f"PutData_Todo_{timeCurr}.csv", PutData, delimiter=",")
         
 
 
@@ -92,7 +99,7 @@ def test_todo_id_put_Success_full():
 # Succesffuly create, then delete, then check for an id | DELETE OBJECT OPERATION EXPERIMENT
 def test_todo_id_delete():
         url = BASE_URL + "todos/{id}"    
-        DeleteTimes = np.zeros(TestNum)
+        DeleteData = np.zeros((TestNum,3))
         for i in range(TestNum):
 
                 #Setup
@@ -107,11 +114,13 @@ def test_todo_id_delete():
 
                 start = time.perf_counter()
                 response = requests.delete(url.format(id = ID))
+                DeleteData[i,1] = psutil.cpu_percent(0.1)
+                DeleteData[i,2] = (psutil.virtual_memory().available / psutil.virtual_memory().total)* 100
                 end = time.perf_counter()
                 assert response.status_code == 200
 
-                DeleteTimes[i] = end - start
-        np.savetxt(f"DeleteTimes_{timeCurr}.csv", DeleteTimes, delimiter=",")
+                DeleteData[i,0] = end - start
+        np.savetxt(f"DeleteData_Todo_{timeCurr}.csv", DeleteData, delimiter=",")
 
 
 
