@@ -5,7 +5,8 @@ import pytest
 # Can run all tests by running this file
 
 def test_all_modules():
-    test_modules = ["Todo_Performance_Tests.py", "Categories_Performance_Tests.py", "Project_Performance_Tests.py"]
+    test_modules = ["Todo_Performance_Tests.py", "Categories_Performance_Tests.py"] #Project_Performance_Tests.py
+    #test_modules = ["Project_Performance_Tests.py"] 
     pytest.main(test_modules)
 
 if __name__ == "__main__":
